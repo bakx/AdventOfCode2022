@@ -20,12 +20,18 @@ typedef struct Game
 #define PAPER_OTHER 'B'
 #define SCISSOR_OTHER 'C'
 
+#define SHOULD_LOSE 'X'
+#define SHOULD_DRAW 'Y'
+#define SHOULD_WIN 'Z'
+
 #define GAME_DRAW 0
 #define GAME_LOSE -1
 #define GAME_WIN 1
 
 #define SCORE_DRAW 3
 #define SCORE_WIN 6
+
+void* gameModifier(Game* game);
 
 int getPoints(char play)
 {
@@ -45,8 +51,11 @@ int getPoints(char play)
     return 0;
 }
 
-int playGame(Game* game)
+int playGame(Game* game, void* alterResults)
 {
+    if (alterResults)
+        gameModifier(game);
+
     if (game->playerA == ROCK)
     {
         if (game->playerB == ROCK_OTHER)
@@ -103,6 +112,38 @@ int playGame(Game* game)
     }
 }
 
+void* gameModifier(Game* game)
+{
+    if (game->playerA == SHOULD_LOSE)
+    {
+        if (game->playerB == ROCK_OTHER)
+            game->playerA = SCISSOR;
+        else if (game->playerB == PAPER_OTHER)
+            game->playerA = ROCK;
+        else if (game->playerB == SCISSOR_OTHER)
+            game->playerA = PAPER;
+    }
+    else if (game->playerA == SHOULD_DRAW)
+    {
+        if (game->playerB == ROCK_OTHER)
+            game->playerA = ROCK;
+        else if (game->playerB == PAPER_OTHER)
+            game->playerA = PAPER;
+        else if (game->playerB == SCISSOR_OTHER)
+            game->playerA = SCISSOR;
+    }
+    else if (game->playerA == SHOULD_WIN)
+    {
+        if (game->playerB == ROCK_OTHER)
+            game->playerA = PAPER;
+        else if (game->playerB == PAPER_OTHER)
+            game->playerA = SCISSOR;
+        else if (game->playerB == SCISSOR_OTHER)
+            game->playerA = ROCK;
+    }
+}
+
+
 int main(int argc, const char *const argv[])
 {
     FILE * fp = fopen("day2.txt", "r");
@@ -119,11 +160,29 @@ int main(int argc, const char *const argv[])
         g->playerA = line[2];
         g->playerB = line[0];
 
-        playGame(g);
+        playGame(g, NULL);
         result += g->points;
+        free(g);
     }
 
-    printf("Total points %ld\n", result);
+    printf("Total points #1 %ld\n", result);
+
+    result = 0;
+    rewind(fp);
+
+    while ((read = getline(&line, &len, fp)) != -1)
+    {
+        // Prep game
+        Game* g = malloc(sizeof(Game));
+        g->playerA = line[2];
+        g->playerB = line[0];
+
+        playGame(g, gameModifier);
+        result += g->points;
+        free(g);
+    }
+
+    printf("Total points #2 %ld\n", result);
     
     free(line);
     fclose(fp);
