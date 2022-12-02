@@ -59,56 +59,29 @@ int playGame(Game* game, void* alterResults)
     if (game->playerA == ROCK)
     {
         if (game->playerB == ROCK_OTHER)
-        {
-            game->result = GAME_DRAW;
             game->points = SCORE_DRAW + getPoints(game->playerA);
-        }
         else if (game->playerB == PAPER_OTHER)
-        {
-            game->result = GAME_LOSE;
             game->points = getPoints(game->playerA);
-        }
         else if (game->playerB == SCISSOR_OTHER)
-        {
-            game->result = GAME_WIN;
             game->points = SCORE_WIN + getPoints(game->playerA);
-        }
     }
     else if (game->playerA == PAPER)
     {
         if (game->playerB == ROCK_OTHER)
-        {
-            game->result = GAME_WIN;
             game->points = SCORE_WIN + getPoints(game->playerA);
-        }
         else if (game->playerB == PAPER_OTHER)
-        {
-            game->result = GAME_DRAW;
             game->points = SCORE_DRAW + getPoints(game->playerA);
-        }
         else if (game->playerB == SCISSOR_OTHER)
-        {
-            game->result = GAME_LOSE;
             game->points = getPoints(game->playerA);
-        }
     }
     else if (game->playerA == SCISSOR)
     {
         if (game->playerB == ROCK_OTHER)
-        {
-            game->result = GAME_LOSE;
             game->points = getPoints(game->playerA);
-        }
         else if (game->playerB == PAPER_OTHER)
-        {
-            game->result = GAME_WIN;
             game->points = SCORE_WIN + getPoints(game->playerA);
-        }
         else if (game->playerB == SCISSOR_OTHER)
-        {
-            game->result = GAME_DRAW;
             game->points = SCORE_DRAW + getPoints(game->playerA);
-        }
     }
 }
 
@@ -143,7 +116,6 @@ void* gameModifier(Game* game)
     }
 }
 
-
 int main(int argc, const char *const argv[])
 {
     FILE * fp = fopen("day2.txt", "r");
@@ -151,38 +123,26 @@ int main(int argc, const char *const argv[])
     size_t len = 0;
     ssize_t read;
 
-    long int result = 0;;
+    long int result = 0;
+    long int resultMod = 0;
 
     while ((read = getline(&line, &len, fp)) != -1)
     {
-        // Prep game
         Game* g = malloc(sizeof(Game));
         g->playerA = line[2];
         g->playerB = line[0];
 
         playGame(g, NULL);
         result += g->points;
+
+        playGame(g, gameModifier);
+        resultMod += g->points;
+
         free(g);
     }
 
     printf("Total points #1 %ld\n", result);
-
-    result = 0;
-    rewind(fp);
-
-    while ((read = getline(&line, &len, fp)) != -1)
-    {
-        // Prep game
-        Game* g = malloc(sizeof(Game));
-        g->playerA = line[2];
-        g->playerB = line[0];
-
-        playGame(g, gameModifier);
-        result += g->points;
-        free(g);
-    }
-
-    printf("Total points #2 %ld\n", result);
+    printf("Total points #2 %ld\n", resultMod);
     
     free(line);
     fclose(fp);
