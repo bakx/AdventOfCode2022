@@ -28,7 +28,6 @@ int main(int argc, const char *const argv[])
     elves[0]->elfNumber = 1;
     elves[0]->calories = 0;
 
-    char value[10];
     char *eptr;
     long int result;
 
@@ -63,8 +62,6 @@ int main(int argc, const char *const argv[])
         }
     }
 
-    printf("Elf %d has most calories (%lld)\n", elves[elfMostCalories]->elfNumber, elves[elfMostCalories]->calories);
-
     int i, j;
     for (i = 0; i < elvesCount - 1; i++)
     {
@@ -75,11 +72,14 @@ int main(int argc, const char *const argv[])
         }
     }
 
-    //for (int i=0; i < 3; i++)
-    //    printf("Elf %d at position %d has %lld calories\n", elves[i]->elfNumber, i+1, elves[i]->calories);
-
+    printf("Elf %d has most calories (%lld)\n", elves[elfMostCalories]->elfNumber, elves[elfMostCalories]->calories);
     printf("Sum of top 3 elves, %lld\n", elves[0]->calories + elves[1]->calories + elves[2]->calories);
     
+     for (int i=0; i < elvesCount + 1; i++)
+        free(elves[i]);
+    
+    free(elves);
+
     free(line);
     fclose(fp);
 }

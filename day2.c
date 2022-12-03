@@ -1,14 +1,12 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 typedef struct Game 
 {
     int round;
     char playerA;
     char playerB;
-    int result; // -1 lose, 0 draw, 1 won
     int points;
 } Game;
 
@@ -23,10 +21,6 @@ typedef struct Game
 #define SHOULD_LOSE 'X'
 #define SHOULD_DRAW 'Y'
 #define SHOULD_WIN 'Z'
-
-#define GAME_DRAW 0
-#define GAME_LOSE -1
-#define GAME_WIN 1
 
 #define SCORE_DRAW 3
 #define SCORE_WIN 6
