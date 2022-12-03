@@ -68,8 +68,8 @@ int main(int argc, const char *const argv[])
 
     while ((read = getline(&line, &len, fp)) != -1)
     {
-        char * comp1 = malloc(sizeof(char) * read - 1 / 2) + 1;
-        char * comp2 = malloc(sizeof(char) * read - 1 / 2) + 1;
+        char comp1[50] = {0};  
+        char comp2[50] = {0};
 
         for(int i=0; i < read - 1;i++)
         {
@@ -79,12 +79,9 @@ int main(int argc, const char *const argv[])
                 comp2[i - read / 2 ] = line[i];
         }
 
-        comp1 += '\0';
-        comp2 += '\0';
-
         char dup = findDuplicate(comp1, comp2);
         result += getCharScore(dup);
-
+        
         for (int i=0; i < 6; i++)
         {
             if (strlen(rucksacks[i]) > 0)
@@ -98,11 +95,11 @@ int main(int argc, const char *const argv[])
             badgeResult += processRucksacks(rucksacks, 0);
             badgeResult += processRucksacks(rucksacks, 3);
             
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 6; i++) {
+                free(rucksacks[i]);
                 rucksacks[i] = "";
+            }
         }
-
-        comp1 = comp2 = "";
     }
 
     printf("Total points #1 %ld\n", result);
