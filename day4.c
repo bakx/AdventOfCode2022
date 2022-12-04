@@ -6,18 +6,11 @@
 
 typedef struct ElfSection 
 {
-    char * start;
-    char * end;
+    char start[5];
+    char end[5];
     int startInt;
     int endInt;
 } ElfSection;
-
-ElfSection * createElfSection()
-{
-    ElfSection * section = malloc(sizeof(ElfSection));
-    section->start = malloc(sizeof(char) * 5);
-    section->end = malloc(sizeof(char) * 5);
-}
 
 void populateInt(ElfSection * section)
 {
@@ -62,8 +55,9 @@ int main(int argc, const char *const argv[])
 
     while ((read = getline(&line, &len, fp)) != -1)
     {
-        ElfSection * section1 = createElfSection();
-        ElfSection * section2 = createElfSection();
+        ElfSection section1;
+        ElfSection section2;
+        char range[5] = {0};
 
         bool gotSection1 = false;
         bool foundRange = false;
@@ -72,6 +66,9 @@ int main(int argc, const char *const argv[])
         {
             if (line[i] == ',')
             {
+                strcpy(section1.end, range);
+                memset(range, 0, sizeof(range));
+
                 gotSection1 = true;
                 foundRange = false;
                 continue;
@@ -79,33 +76,23 @@ int main(int argc, const char *const argv[])
 
             if (line[i] == '-')
             {
+                (gotSection1) ? strcpy(section2.start, range) : strcpy(section1.start, range);
+                memset(range, 0, sizeof(range));
+
                 foundRange = true;
                 continue;
             }
 
-            if (!gotSection1)
-            {
-                if (foundRange)
-                    strncat(section1->end, &line[i], 1);
-                else 
-                    strncat(section1->start, &line[i], 1);
-            }
-            else
-            {
-                if (foundRange)
-                    strncat(section2->end, &line[i], 1);
-                else 
-                    strncat(section2->start, &line[i], 1);
-            }
+            strncat(range, &line[i], 1);
         }
-        populateInt(section1);
-        populateInt(section2);
+        
+        strcpy(section2.end, range);
+        
+        populateInt(&section1);
+        populateInt(&section2);
 
-        result += findCompleteOverlap(section1, section2);
-
-        int r = findPartialOverlap(section1, section2);
-        printf("%s = %d\n", line, r);
-        partialResult +=  findPartialOverlap(section1, section2);
+        result += findCompleteOverlap(&section1, &section2);
+        partialResult +=  findPartialOverlap(&section1, &section2);
     }
 
     printf("Total points #1 %ld\n", result);
