@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <regex.h>
 
 typedef struct Stack
 {
@@ -46,6 +45,8 @@ Node * pop(Stack * stack)
     if (stack->next == next)
         stack->next = NULL;
 
+    stack->size -= 1;
+
     return next;
 }
 
@@ -54,6 +55,7 @@ void push(Stack * stack, Node * n, bool inverse)
     if (!stack->next)
     {
         stack->next = n;
+        stack->size += 1;
         return;
     }
 
@@ -71,7 +73,7 @@ void push(Stack * stack, Node * n, bool inverse)
         }
 
         next->next = n;
-    } 
+    }
     else
     {
         Node * prev = NULL;
@@ -88,6 +90,50 @@ void push(Stack * stack, Node * n, bool inverse)
         n->next = stack->next;
         stack->next = n;
     }
+
+    stack->size += 1;
+}
+
+void move(Stack * s, Stack * d, int count)
+{
+    Node * prev = NULL;
+    Node * next = s->next;
+
+    if (s->size - count > 0)
+    {
+        for (int i = 0; i < s->size - count; i++)
+        {
+            prev = next;
+            next = next->next;        
+        }
+    }
+
+    if (prev)
+        prev->next = NULL;
+
+    Node * dest = d->next;
+
+    if (dest)
+    {
+        while(1)
+        {
+            if (!dest->next)
+                break;
+            
+            dest = dest->next;
+        }
+
+        dest->next = next;
+    }
+    else
+        d->next = next;
+
+    s->size -= count;
+
+    if (s->size == 0)
+        s->next = NULL;
+
+    d->size += count;
 }
 
 void printStack(Stack * stack)
@@ -115,6 +161,23 @@ void printStack(Stack * stack)
         printf("]\n");
     }
     printf("\n");
+}
+
+void cleanStack(Stack * stack)
+{
+    Node * prev = NULL;
+    Node * next = stack->next;
+
+    while(1)
+    {
+        if (!next || !next->next)
+            break;
+        
+        prev = next;
+        next = next->next;
+
+        free(prev);
+    }
 }
 
 char findTop(Stack * stack)
@@ -148,17 +211,14 @@ int main(int argc, const char *const argv[])
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
-    regex_t regex;
-
-    int reti  = regcomp(&regex, "^move ([0-9]+) from ([0-9]+) to ([0-9]+)\n$", REG_EXTENDED);
-
-    long int result = 0;
-    long int partialResult = 0;
 
     bool loadInstructions = false;
     bool init = false;
 
     Stack * stack = malloc(sizeof(Stack));
+    stack->size = 0;
+    Stack * stack2 = malloc(sizeof(Stack));
+    stack->size = 0;
 
     while ((read = getline(&line, &len, fp)) != -1)
     {
@@ -168,7 +228,19 @@ int main(int argc, const char *const argv[])
             stack->stack = malloc(sizeof(Stack*) * stack->size);
 
             for (int i=0; i < stack->size; i++)
+            {
                 stack->stack[i] = malloc(sizeof(Stack));
+                stack->stack[i]->size = 0;
+            }
+
+            stack2->size = read/4;
+            stack2->stack = malloc(sizeof(Stack*) * stack2->size);
+
+            for (int i=0; i < stack2->size; i++)
+            {
+                stack2->stack[i] = malloc(sizeof(Stack));
+                stack2->stack[i]->size = 0;
+            }
 
             init = true;
         }
@@ -182,8 +254,6 @@ int main(int argc, const char *const argv[])
 
         if (loadInstructions)
         {
-            printf("%s\n", line);
-
             bool p1, p2, p3;
             char m1[5], m2[5], m3[5] = {0};
             memset(m1, 0, sizeof(m1));
@@ -225,16 +295,21 @@ int main(int argc, const char *const argv[])
             i2 = strtol(m2, &ptr, 10);
             i3 = strtol(m3, &ptr, 10);
 
+            // Part 1
             Stack * s = stack->stack[i2 - 1];
             Stack * d = stack->stack[i3 - 1];
-            for (int j=0; j< i1; j++)
+
+            for (int j=0; j< i1; j++) 
             {
                 Node * n = pop(s);
                 push(d, n, false);
-                printStack(stack);
             }
 
-            printStack(stack);
+            // Part 2
+            Stack * s2 = stack2->stack[i2 - 1];
+            Stack * d2 = stack2->stack[i3 - 1];
+
+            move(s2, d2, i1);
             continue;
         }
 
@@ -254,18 +329,30 @@ int main(int argc, const char *const argv[])
 
             Node * node = createNode(&c);
             push(stack->stack[position], node, true);
+
+            Node * node2 = createNode(&c);
+            push(stack2->stack[position], node2, true);
         }
     }
 
-    printStack(stack); // DEBUGGING 
-
     printf("Crate values #1 [");
-
     for (int i = 0; i < stack->size; i++)
+    {
         printf( "%c", findTop(stack->stack[i]));
+        cleanStack(stack->stack[i]);
+    }
     printf("]\n");
-    
-    printf("Total points #2 %ld\n", partialResult);
+
+    printf("Crate values #2 [");
+    for (int i = 0; i < stack2->size; i++)
+    {
+        printf( "%c", findTop(stack2->stack[i]));
+        cleanStack(stack2->stack[i]);
+    }
+    printf("]\n");
+
+    free(stack);
+    free(stack2);
     
     free(line);
     fclose(fp);
