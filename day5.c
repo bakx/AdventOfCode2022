@@ -40,11 +40,16 @@ Node * pop(Stack * stack)
         next = next->next;
     }
 
-    prev->next = NULL;
+    if (prev)
+        prev->next = NULL;
+    
+    if (stack->next == next)
+        stack->next = NULL;
+
     return next;
 }
 
-void push(Stack * stack, Node * n)
+void push(Stack * stack, Node * n, bool inverse)
 {
     if (!stack->next)
     {
@@ -52,17 +57,81 @@ void push(Stack * stack, Node * n)
         return;
     }
 
+    if (!inverse)
+    {
+        Node * prev = NULL;
+        Node * next = stack->next;
+
+        while (1)
+        {
+            if (!next->next)
+                break;
+
+            next = next->next;
+        }
+
+        next->next = n;
+    } 
+    else
+    {
+        Node * prev = NULL;
+        Node * next = stack->next;
+
+        while (1)
+        {
+            if (!next->next)
+                break;
+
+            next = next->next;
+        }
+
+        n->next = stack->next;
+        stack->next = n;
+    }
+}
+
+void printStack(Stack * stack)
+{
+    for (int i = 0; i < stack->size; i++)   // DEBUGGING 
+    {
+        Node * next = stack->stack[i]->next;
+        printf("Stack %d has keys [", i + 1);
+
+        if (!next)
+        {
+            printf("]\n");
+            continue;
+        }
+
+        while (1)
+        {
+            printf(" %c ", next->key[0]);
+
+            if (!next->next)
+                break;
+
+            next = next->next;
+        }
+        printf("]\n");
+    }
+    printf("\n");
+}
+
+char findTop(Stack * stack)
+{
     Node * next = stack->next;
+    if (!next)
+        return ' ';
     
     while (1)
     {
         if (!next->next)
             break;
-        
+
         next = next->next;
     }
 
-    next->next = n;
+    return next->key[0];
 }
 
 Node * createNode(char * key)
@@ -106,107 +175,96 @@ int main(int argc, const char *const argv[])
 
         if (read == 1)
         {
+            printStack(stack);
             loadInstructions = true;
             continue;
         }
 
         if (loadInstructions)
         {
-            bool p1, p2, p3 = false;
-            char m1[5], m2[5], m3[5];
-             for(int i = 5; i < strlen(line); i++)
-             {
+            printf("%s\n", line);
+
+            bool p1, p2, p3;
+            char m1[5], m2[5], m3[5] = {0};
+            memset(m1, 0, sizeof(m1));
+            memset(m2, 0, sizeof(m2));
+            memset(m3, 0, sizeof(m3));
+            
+            p1 = true;
+            p2 = false;
+            p3 = false;
+            bool hasStarted = false;
+            
+            for(int i = 5; i < strlen(line); i++)
+            {
                 char c = line[i];
 
-                if ( (int) c != 32 && ((int) c < 48 || (int) c > 57))
+                if ((int) c == 32 && hasStarted)
+                {
+                    if (p1 && !p2)
+                        p2 = true;
+                    else if (p1 && p2)
+                        p3 = true;
+
+                    hasStarted = false;                    
+                    continue;
+                }
+
+                 if ((int) c < 48 || (int) c > 57)
                     continue;
 
-                if (line[i] == ' ')
-                {
-                    if (!p1) {
-                        p1 = true;
-                        continue;
-                    }
+                char * dest = (p1 && !p2 && !p3 ? m1 : p1 && p2 && !p3 ? m2 : m3);
+                hasStarted = true;
 
-                    if (!p2)
-                    {
-                        p2 = true;
-                        continue;
-                    }
+                strncat(dest, &c, 1);
+            }
 
-                    if (!p3)
-                    {
-                        p3 = true;
-                        continue;
-                    }
-                }
+            int i1, i2, i3;
+            char * ptr;
+            i1 = strtol(m1, &ptr, 10);
+            i2 = strtol(m2, &ptr, 10);
+            i3 = strtol(m3, &ptr, 10);
 
-                if (!p1 && c != ' ')
-                {
-                    strcat(m1, &c);
-                     continue;
-                }
+            Stack * s = stack->stack[i2 - 1];
+            Stack * d = stack->stack[i3 - 1];
+            for (int j=0; j< i1; j++)
+            {
+                Node * n = pop(s);
+                push(d, n, false);
+                printStack(stack);
+            }
 
-                if (!p2 && c != ' ')
-                {
-                    strcat(m2, &c);
-                     continue;
-                } 
-
-                if (!p3 && c != ' ')
-                {
-                    strcat(m3, &c);
-                     continue;
-                } 
-               
-                
-
-
-             }
-
-          
-            //move %d from %d to %d
-            // todo
-
+            printStack(stack);
             continue;
         }
 
         for(int i = 0; i < strlen(line); i++)
         {
-            if ( (int) line[i] < 65 || (int) line[i] > 90)
+            char c = line[i];
+
+            if ( (int) c < 65 || (int) c > 90)
                 continue;
 
             // Get position
-            int position = i / stack->size;
+            int position = i / 4;
             if (i == 1)
                 position = 0;
-            if (read - stack->size == i)
+            if (read - 4 == i)
                 position -= 1; // final object has no space
 
-            Node * node = createNode(&line[i]);
-            push(stack->stack[position], node);
+            Node * node = createNode(&c);
+            push(stack->stack[position], node, true);
         }
     }
 
-    for (int i = 0; i < stack->size; i++)   // DEBUGGING 
-    {
-        Node * next = stack->stack[i]->next;
-        printf("Stack %d has keys [", i + 1);
+    printStack(stack); // DEBUGGING 
 
-        while (1)
-        {
-            printf(" %c ", next->key[0]);
+    printf("Crate values #1 [");
 
-            if (!next->next)
-                break;
-        
-            next = next->next;
-        }
-        
-        printf("]\n");
-
-    }
-    printf("Total points #1 %ld\n", result);
+    for (int i = 0; i < stack->size; i++)
+        printf( "%c", findTop(stack->stack[i]));
+    printf("]\n");
+    
     printf("Total points #2 %ld\n", partialResult);
     
     free(line);
