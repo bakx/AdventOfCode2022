@@ -17,7 +17,6 @@ typedef struct FilesData
 {
     char *name;
     long long int size;
-
 } FilesData;
 
 enum CURRENT_STATE
@@ -95,9 +94,8 @@ void part2(DirData * dirData, long long int requiredSpace)
     } 
     else
     {
-        if (fabs(diff) < fabs(part2Dirsize - requiredSpace) && dirData->size >= requiredSpace)
+        if (llabs(diff) < llabs(part2Dirsize - requiredSpace) && dirData->size >= requiredSpace)
         {
-            printf("%s - %lld\n", dirData->name, dirData->size);
             part2Diff = diff;
             part2Dirsize = dirData->size;
         }
@@ -272,6 +270,8 @@ int main(int argc, const char *const argv[])
     printf("Dir size #2 %lld\n", part2Dirsize);
 
     //printTree(root);
+
+    freeTree(root);
 
     free(line);
     fclose(fp);
