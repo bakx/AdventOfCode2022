@@ -165,13 +165,13 @@ int getVisible(GridField *start, VIEW_DIRECTION direction)
         {
         case VIEW_LEFT:
         case VIEW_RIGHT:
-        case VIEW_TOP:
             if (!rowStart->down)
                 endOfLine = true;
             else
                 rowStart = rowStart->down;
 
             break;
+        case VIEW_TOP:
         case VIEW_BOTTOM:
             if (!rowStart->right)
                 endOfLine = true;
@@ -195,10 +195,10 @@ int part1()
 {
     int visible = 0;
 
-    //visible += getVisible(gridCorners->left_top, VIEW_LEFT);
-    //visible += getVisible(gridCorners->right_top, VIEW_RIGHT);
+    visible += getVisible(gridCorners->left_top, VIEW_LEFT);
+    visible += getVisible(gridCorners->right_top, VIEW_RIGHT);
     visible += getVisible(gridCorners->left_bottom, VIEW_BOTTOM);
-    //visible += getVisible(gridCorners->left_top, VIEW_TOP);
+    visible += getVisible(gridCorners->left_top, VIEW_TOP);
 
     return visible;
 }
