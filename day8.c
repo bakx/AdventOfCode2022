@@ -190,7 +190,7 @@ int getVisible(GridField *start, VIEW_DIRECTION direction)
 
 int getView(GridField *field, VIEW_DIRECTION direction)
 {
-    short heighestTree = 0;
+    short treeHeight = field->value;
     short score = 0;
 
     if (!getDirection(field, direction))
@@ -202,16 +202,16 @@ int getView(GridField *field, VIEW_DIRECTION direction)
 
         if (gridDirection)
         {
-            if (gridDirection->value > heighestTree)
-            {
-                score++;
-                heighestTree = gridDirection->value;
-            }
+            score++;
+
+            if (gridDirection->value >= treeHeight)
+                break;
 
             field = gridDirection;
+            continue;
         }
-        else
-            break;
+
+        break;
     }
 
     return score;
@@ -241,28 +241,36 @@ int part2()
     {
         int currentScore = 0;
 
-        if (field->x == 3 && field->y == 2)
+        if (!(field->x == 0 || field->x + 1 == GRID_SIZE || field->y == 0 || field->y + 1 == GRID_SIZE)) // skip edges
         {
-            int b = currentScore;
-        }
+            if (field->x == 3 && field->y == 2)
+            {
+                int b = currentScore;
+            }
 
-        for (int i = 0; i < 4; i++) 
-        {
-            if (i < 2)
-                score = getView(field, (i == 0) ? VIEW_LEFT : VIEW_RIGHT);
-            else
-                score = getView(field, (i == 3) ? VIEW_TOP : VIEW_BOTTOM);
 
-            if (currentScore > 0 && score > 0)
-                currentScore *= score;
-            else if (currentScore == 0 && score > 0)
-                currentScore = score;
-        }
+            int scores[4];
 
-        if (currentScore > maxScore)
-        {
-            printf("%d for item on position x %d y %d\n", currentScore, field->x, field->y);
-            maxScore = currentScore;
+            for (int i = 0; i < 4; i++) 
+            {
+                if (i < 2)
+                    score = getView(field, (i == 0) ? VIEW_LEFT : VIEW_RIGHT);
+                else
+                    score = getView(field, (i == 3) ? VIEW_TOP : VIEW_BOTTOM);
+
+                scores[i] = score;
+
+                if (currentScore > 0 && score > 0)
+                    currentScore = currentScore * score;
+                else if (currentScore == 0 && score > 0)
+                    currentScore = score;
+            }
+
+            if (currentScore > maxScore)
+            {
+                //printf("%d for item on position x=%d y=%d val=%d scores[0]=%d scores[1]=%d scores[2]=%d scores[3]=%d\n", currentScore, field->x, field->y, field->value, scores[0], scores[1], scores[2], scores[3]);
+                maxScore = currentScore;
+            }
         }
 
         if (field->right)
@@ -346,11 +354,10 @@ int main(int argc, const char *const argv[])
 
     gridCorners->right_bottom = lastAdded;
 
-    //printf("Visible #1 %d\n\n", part1());
-
+    printf("Visible #1 %d\n\n", part1());
     printf("Score #2 %d\n\n", part2());
 
-    printGrid(gridStart);
+   // printGrid(gridStart);
 
     free(line);
     fclose(fp);
