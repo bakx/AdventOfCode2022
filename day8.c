@@ -7,14 +7,14 @@
 #define NUMELEM(a) (sizeof(a) / sizeof(*a))
 #define GRID_SIZE 99
 
-#define KNRM  "\x1B[0m"
-#define KRED  "\x1B[31m"
-#define KGRN  "\x1B[32m"
-#define KYEL  "\x1B[33m"
-#define KBLU  "\x1B[34m"
-#define KMAG  "\x1B[35m"
-#define KCYN  "\x1B[36m"
-#define KWHT  "\x1B[37m"
+#define KNRM "\x1B[0m"
+#define KRED "\x1B[31m"
+#define KGRN "\x1B[32m"
+#define KYEL "\x1B[33m"
+#define KBLU "\x1B[34m"
+#define KMAG "\x1B[35m"
+#define KCYN "\x1B[36m"
+#define KWHT "\x1B[37m"
 
 typedef enum VIEW_DIRECTION
 {
@@ -131,7 +131,6 @@ int getVisible(GridField *start, VIEW_DIRECTION direction)
             {
                 if (!field->flaggedAsVisible)
                 {
-                    //printf("Visible: x=%d y=%d val=%u\n", field->x, field->y, field->value);
                     visible++;
                     field->flaggedAsVisible = true;
                 }
@@ -142,7 +141,6 @@ int getVisible(GridField *start, VIEW_DIRECTION direction)
             {
                 if (!field->flaggedAsVisible)
                 {
-                    //printf("Visible: x=%d y=%d val=%u\n", field->x, field->y, field->value);
                     visible++;
                     field->flaggedAsVisible = true;
                 }
@@ -154,7 +152,6 @@ int getVisible(GridField *start, VIEW_DIRECTION direction)
 
         if (!field->flaggedAsVisible)
         {
-            //printf("Visible: x=%d y=%d val=%u\n", field->x, field->y, field->value);
             visible++;
             field->flaggedAsVisible = true;
         }
@@ -191,6 +188,35 @@ int getVisible(GridField *start, VIEW_DIRECTION direction)
     return visible;
 }
 
+int getView(GridField *field, VIEW_DIRECTION direction)
+{
+    short heighestTree = 0;
+    short score = 0;
+
+    if (!getDirection(field, direction))
+        return 0;
+
+    while (1)
+    {
+        GridField * gridDirection = getDirection(field, direction);
+
+        if (gridDirection)
+        {
+            if (gridDirection->value > heighestTree)
+            {
+                score++;
+                heighestTree = gridDirection->value;
+            }
+
+            field = gridDirection;
+        }
+        else
+            break;
+    }
+
+    return score;
+}
+
 int part1()
 {
     int visible = 0;
@@ -201,6 +227,61 @@ int part1()
     visible += getVisible(gridCorners->left_top, VIEW_TOP);
 
     return visible;
+}
+
+int part2()
+{
+    int score = 0;
+    int maxScore = 0;
+
+    GridField *rowStart = gridCorners->left_top;
+    GridField *field = rowStart;
+
+    while (1)
+    {
+        int currentScore = 0;
+
+        if (field->x == 3 && field->y == 2)
+        {
+            int b = currentScore;
+        }
+
+        for (int i = 0; i < 4; i++) 
+        {
+            if (i < 2)
+                score = getView(field, (i == 0) ? VIEW_LEFT : VIEW_RIGHT);
+            else
+                score = getView(field, (i == 3) ? VIEW_TOP : VIEW_BOTTOM);
+
+            if (currentScore > 0 && score > 0)
+                currentScore *= score;
+            else if (currentScore == 0 && score > 0)
+                currentScore = score;
+        }
+
+        if (currentScore > maxScore)
+        {
+            printf("%d for item on position x %d y %d\n", currentScore, field->x, field->y);
+            maxScore = currentScore;
+        }
+
+        if (field->right)
+        {
+            field = field->right;
+            continue;
+        }
+
+        if (rowStart->down)
+        {
+            field = rowStart->down;
+            rowStart = field;
+            continue;
+        }
+
+        break;
+    }
+
+    return maxScore;
 }
 
 int main(int argc, const char *const argv[])
@@ -228,8 +309,9 @@ int main(int argc, const char *const argv[])
                 gridCorners->right_top = lastAdded;
 
             x = 0;
-            lastAdded = NULL;
             y++;
+            
+            lastAdded = NULL;
             continue;
         }
 
@@ -252,7 +334,7 @@ int main(int argc, const char *const argv[])
             gridField->up = lastRow[x];
             lastRow[x]->down = gridField;
         }
-        
+
         if (x == 0 && y + 1 == GRID_SIZE)
             gridCorners->left_bottom = gridField;
 
@@ -264,17 +346,11 @@ int main(int argc, const char *const argv[])
 
     gridCorners->right_bottom = lastAdded;
 
+    //printf("Visible #1 %d\n\n", part1());
 
-    printf("Visible #1 %d\n\n", part1());
+    printf("Score #2 %d\n\n", part2());
 
     printGrid(gridStart);
-
-    // while ((read = getline(&line, &len, fp)) != -1)
-    //  {
-    // }
-
-    // printf("Sum #1 %lld\n", part1Filesize);
-    // printf("Dir size #2 %lld\n", part2Dirsize);
 
     free(line);
     fclose(fp);
