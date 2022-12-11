@@ -35,8 +35,25 @@ void checkInsert(int x, int y)
     tailVisits[insertIndex] = tailVisit;
 }
 
-void move()
+void move(char dir, int * x, int * y, int * tailX, int * tailY, int * steps)
 {
+    int * target =  (dir == 'U' || dir == 'D') ? y : x;
+
+
+    for (int i = 0; i < *steps; i++)
+    {
+        target--;
+
+        if (abs(y - tailY) > 1)
+        {
+            if (x != tailX)
+                tailX = (x > tailX) ? +1 : -1;
+
+            tailY--;
+        }
+        
+        checkInsert(tailX, tailY);
+    }
 }
 
 int main(int argc, const char *const argv[])
@@ -46,16 +63,18 @@ int main(int argc, const char *const argv[])
     size_t len = 0;
     ssize_t read;
 
+    int x = 0;
+    int y = 0;
+    int tailX = 0;
+    int tailY = 0;
+
+    checkInsert(0,0); // Start position
+
     while ((read = getline(&line, &len, fp)) != -1)
     {
         char dir;
         int steps;
         sscanf(line, "%c %d\n", &dir, &steps);
-
-        int x, y = 0;
-        int tailX, tailY = 0;
-
-        checkInsert(0,0); // Start position
 
         switch (dir)
         {
@@ -68,10 +87,10 @@ int main(int argc, const char *const argv[])
                 {
                     if (x != tailX)
                         tailX = (x > tailX) ? +1 : -1;
+    
+                    tailY--;
                 }
                 
-                tailY--;
-
                 checkInsert(tailX, tailY);
             }
 
@@ -85,10 +104,10 @@ int main(int argc, const char *const argv[])
                 {
                     if (y != tailY)
                         tailY = (y > tailY) ? +1 : -1;
+                                
+                    tailX++;
                 }
                 
-                tailX++;
-
                 checkInsert(tailX, tailY);
             }
             break;
@@ -101,10 +120,10 @@ int main(int argc, const char *const argv[])
                 {
                     if (x != tailX)
                         tailX = (x > tailX) ? +1 : -1;
+
+                    tailY++;
                 }
                 
-                tailY++;
-
                 checkInsert(tailX, tailY);
             }
             break;
@@ -117,9 +136,9 @@ int main(int argc, const char *const argv[])
                 {
                     if (y != tailY)
                         tailY = (y > tailY) ? +1 : -1;
-                }
 
-                tailX--;
+                    tailX--;
+                }
 
                 checkInsert(tailX, tailY);
             }
