@@ -18,6 +18,8 @@ void checkInsert(int x, int y)
 {
     int insertIndex = 0;
 
+    printf("%s-x=%d y=%d\n", __func__, x, y);
+
     for (int i = 0; i < GRID_SIZE; i++)
     {
         insertIndex = i;
@@ -29,7 +31,7 @@ void checkInsert(int x, int y)
             return;
     }
 
-    TailVisit * tailVisit = malloc(sizeof(TailVisit));
+    TailVisit *tailVisit = malloc(sizeof(TailVisit));
     tailVisit->x = x;
     tailVisit->y = y;
     tailVisits[insertIndex] = tailVisit;
@@ -37,22 +39,33 @@ void checkInsert(int x, int y)
 
 void move(char dir, int * x, int * y, int * tailX, int * tailY, int * steps)
 {
-    int * target =  (dir == 'U' || dir == 'D') ? y : x;
-
+    int * target = (dir == 'U' || dir == 'D') ? y : x;
+    int modifier = (dir == 'D' || dir == 'R') ? 1 : -1;
 
     for (int i = 0; i < *steps; i++)
     {
-        target--;
-
-        if (abs(y - tailY) > 1)
-        {
-            if (x != tailX)
-                tailX = (x > tailX) ? +1 : -1;
-
-            tailY--;
-        }
+        *target += modifier;
         
-        checkInsert(tailX, tailY);
+        printf("step %c-x=%d y=%d\n", dir, *x, *y);
+
+        if (dir == 'U' || dir == 'D')
+        {
+            if (abs(*x - *tailX) > 0 && abs(*y - *tailY) > 1) // check if not in line
+                *tailX = *x;
+            
+            if (abs(*y - *tailY) > 1)
+                *tailY += modifier;
+        }
+        else // L R
+        {
+            if (abs(*y - *tailY) > 0 && abs(*x - *tailX) > 1) // check if not in line
+                *tailY = *y;
+            
+            if (abs(*x - *tailX) > 1)
+                *tailX += modifier;
+        }
+
+        checkInsert(*tailX, *tailY);
     }
 }
 
@@ -68,7 +81,7 @@ int main(int argc, const char *const argv[])
     int tailX = 0;
     int tailY = 0;
 
-    checkInsert(0,0); // Start position
+    //checkInsert(0, 0); // Start position
 
     while ((read = getline(&line, &len, fp)) != -1)
     {
@@ -76,76 +89,7 @@ int main(int argc, const char *const argv[])
         int steps;
         sscanf(line, "%c %d\n", &dir, &steps);
 
-        switch (dir)
-        {
-        case 'U':
-            for (int i = 0; i < steps; i++)
-            {
-                y--;
-
-                if (abs(y - tailY) > 1)
-                {
-                    if (x != tailX)
-                        tailX = (x > tailX) ? +1 : -1;
-    
-                    tailY--;
-                }
-                
-                checkInsert(tailX, tailY);
-            }
-
-            break;
-        case 'R':
-            for (int i = 0; i < steps; i++)
-            {
-                x++;
-
-                if (abs(x - tailX) > 1)
-                {
-                    if (y != tailY)
-                        tailY = (y > tailY) ? +1 : -1;
-                                
-                    tailX++;
-                }
-                
-                checkInsert(tailX, tailY);
-            }
-            break;
-        case 'D':
-            for (int i = 0; i < steps; i++)
-            {
-                y++;
-
-                if (abs(y - tailY) > 1)
-                {
-                    if (x != tailX)
-                        tailX = (x > tailX) ? +1 : -1;
-
-                    tailY++;
-                }
-                
-                checkInsert(tailX, tailY);
-            }
-            break;
-        case 'L':
-            for (int i = 0; i < steps; i++)
-            {
-                x--;
-
-                if (abs(x - tailX) > 1)
-                {
-                    if (y != tailY)
-                        tailY = (y > tailY) ? +1 : -1;
-
-                    tailX--;
-                }
-
-                checkInsert(tailX, tailY);
-            }
-            break;
-        default:
-            break;
-        }
+        move(dir, &x, &y, &tailX, &tailY, &steps);
     }
 
     int visisted = 0;
@@ -158,9 +102,9 @@ int main(int argc, const char *const argv[])
         visisted++;
     }
 
-printf("#1 %d\n", visisted);
-// printf("Dir size #2 %lld\n", part2Dirsize);
+    printf("#1 %d\n", visisted);
+    // printf("Dir size #2 %lld\n", part2Dirsize);
 
-free(line);
-fclose(fp);
+    free(line);
+    fclose(fp);
 }
