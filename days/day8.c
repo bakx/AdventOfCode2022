@@ -243,12 +243,6 @@ int part2()
 
         if (!(field->x == 0 || field->x + 1 == GRID_SIZE || field->y == 0 || field->y + 1 == GRID_SIZE)) // skip edges
         {
-            if (field->x == 3 && field->y == 2)
-            {
-                int b = currentScore;
-            }
-
-
             int scores[4];
 
             for (int i = 0; i < 4; i++) 
