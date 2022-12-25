@@ -7,13 +7,13 @@
 
 #define NUMELEM(a) (sizeof(a) / sizeof(*a))
 
-void moveStack(int ** stack, int *cycleValue)
+void moveStack(int stack[], int *cycleValue)
 {
     if (stack[0] != 0)
     {
-        printf("Adding %d\n", *stack[0]);
+        printf("Adding %d\n", stack[0]);
 
-        cycleValue += *stack[0];
+        *cycleValue += stack[0];
         stack[0] = stack[1];
         stack[1] = stack[2];
         stack[2] = 0;
@@ -30,14 +30,20 @@ void moveStack(int ** stack, int *cycleValue)
     }
 }
 
-void checkCycle(bool *isFirstCycle, int *currentCycle, int *result, int **stack, int *cycleValue)
+void checkCycle(bool *isFirstCycle, int *currentCycle, int *result, int * stack, int *cycleValue)
 {
-    if (isFirstCycle && *currentCycle == 20 || *currentCycle % 40 == 0)
+    if ((*isFirstCycle && *currentCycle == 20) || (*currentCycle > 0 && *currentCycle % 40 == 0))
     {
-        result += *currentCycle * (*cycleValue + *stack[0]);
-        *isFirstCycle = false;
-        *currentCycle = 0;
+        moveStack(stack, cycleValue);
+
+        int res = *currentCycle * (*cycleValue); // + stack[0]);
+        *result += res;
+
+        printf("Cycle result, currentCycle=%d cycleValue=%d result=%d\n", *currentCycle, *cycleValue, res);
+
         *cycleValue = 1;
+        *isFirstCycle = false;
+        *currentCycle = 1;
     }
 }
 
@@ -53,23 +59,13 @@ int main(int argc, const char *const argv[])
     int result = 0;
     bool isFirstCycle = true;
 
-    int *moves[3] = {0};
+    int moves[3] = {0};
     bool isNoop = false;
 
     while ((read = getline(&line, &len, fp)) != -1)
     {
-        currentCycle++;
-
         moveStack(moves, &cycleValue);
-
-        if (isFirstCycle && currentCycle == 20 || currentCycle % 40 == 0)
-        {
-            result += currentCycle * (cycleValue + *moves[0]);
-            isFirstCycle = false;
-            currentCycle = 0;
-            cycleValue = 1;
-            isNoop = false;
-        }
+        checkCycle(&isFirstCycle, &currentCycle, &result, moves, &cycleValue);
 
         int inst;
 
@@ -78,8 +74,10 @@ int main(int argc, const char *const argv[])
             sscanf(line, "addx %d\n", &inst);
             moves[2] = inst;
             currentCycle++;
-            moveStack(&moves, &cycleValue);
+            checkCycle(&isFirstCycle, &currentCycle, &result, moves, &cycleValue);
         }
+        
+        currentCycle++;
     }
 
     printf("#1 %d\n", result);
