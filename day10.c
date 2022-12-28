@@ -11,8 +11,6 @@ void moveStack(int stack[], int *cycleValue)
 {
     if (stack[0] != 0)
     {
-        printf("Adding %d\n", stack[0]);
-
         *cycleValue += stack[0];
         stack[0] = stack[1];
         stack[1] = stack[2];
@@ -30,20 +28,18 @@ void moveStack(int stack[], int *cycleValue)
     }
 }
 
-void checkCycle(bool *isFirstCycle, int *currentCycle, int *result, int * stack, int *cycleValue)
+void checkCycle(bool *isFirstCycle, int *currentCycle, int *result, int *stack, int *cycles, int *cycleValue)
 {
     if ((*isFirstCycle && *currentCycle == 20) || (*currentCycle > 0 && *currentCycle % 40 == 0))
     {
-        moveStack(stack, cycleValue);
-
-        int res = *currentCycle * (*cycleValue); // + stack[0]);
+        int res = ((*currentCycle == 20) ? 20 : 20 + 40 * *cycles) * *cycleValue;
         *result += res;
 
         printf("Cycle result, currentCycle=%d cycleValue=%d result=%d\n", *currentCycle, *cycleValue, res);
 
-        *cycleValue = 1;
+        *cycles+=1;
         *isFirstCycle = false;
-        *currentCycle = 1;
+        *currentCycle = 0;
     }
 }
 
@@ -58,6 +54,7 @@ int main(int argc, const char *const argv[])
     int currentCycle = 0;
     int result = 0;
     bool isFirstCycle = true;
+    int cycles = 0;
 
     int moves[3] = {0};
     bool isNoop = false;
@@ -65,7 +62,7 @@ int main(int argc, const char *const argv[])
     while ((read = getline(&line, &len, fp)) != -1)
     {
         moveStack(moves, &cycleValue);
-        checkCycle(&isFirstCycle, &currentCycle, &result, moves, &cycleValue);
+        checkCycle(&isFirstCycle, &currentCycle, &result, moves, &cycles, &cycleValue);
 
         int inst;
 
@@ -74,9 +71,14 @@ int main(int argc, const char *const argv[])
             sscanf(line, "addx %d\n", &inst);
             moves[2] = inst;
             currentCycle++;
-            checkCycle(&isFirstCycle, &currentCycle, &result, moves, &cycleValue);
+            moveStack(moves, &cycleValue);
+            checkCycle(&isFirstCycle, &currentCycle, &result, moves, &cycles, &cycleValue);
         }
-        
+        else
+            inst = 0;
+
+        printf("%c %d - %d %d\n", line[0], inst, currentCycle, cycleValue);
+
         currentCycle++;
     }
 
